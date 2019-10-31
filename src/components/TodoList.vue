@@ -2,36 +2,61 @@
     <div>
         <input type="text" class="todo-input" placeholder="What needs to be done" v-model="newTodo" @keyup.enter="addTodo">
 
-        <div v-for="(todo, index) in todos" :key="todo.id" class="todo-item">
-           <div class="todo-item-left">
+    <transition-group name="fade" enter-active-class="animated fadeInUp" leave-active-class="animated fadeOutDown">
+
+        <todo-item v-for="(todo, index) in todosFilter" :key="todo.id"  :todo="todo" :index="index" :checkAll="anyRemaining" @removedTodo="removeTodo" @finishedEdit= "finishedEdit">
+           <!-- <div class="todo-item-left">
                <input type="checkbox" v-model="todo.completed">
               <div class="todo-item-label" :class="{ completed : todo.completed }" v-if="!todo.editing" @dblclick="editTodo(todo)">
                     {{ todo.title }}
               </div>
                 <input v-else class="todo-item-edit" type="text" v-model="todo.title" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" v-focus 
                  @keyup.esc="cancleEdit(todo)">
-           </div>
+           </div> 
 
-           <div class="remove-item" @click="removeTodo(index)">
+            <div class="remove-item" @click="removeTodo(index)">
                 &times;
-           </div>
-        </div>
+           </div> -->
+
+        </todo-item>
+
+    </transition-group>
 
         <div class="extra-container">
             <div><label><input type="checkbox" :checked="anyRemaining" @change="checkAllTodos"> Check  All</label></div>
             <div>{{ remaining }} item left</div>
         </div>
+
+        <div class="extra-container">
+            <div>
+                <button :class="{ active : filter == 'all'}" @click="filter = 'all'">All</button>
+                <button :class="{ active : filter == 'active'}" @click="filter = 'active'">Active</button>
+                <button :class="{ active : filter == 'completed'}" @click="filter = 'completed'">Completed</button>
+            </div>
+
+            <div>
+            <transition name="fade">
+                <button v-if="showClearCompletedButton" @click="clearCompleted">Clear Completed</button>
+            </transition>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
+    import TodoItem from './TodoItem';
         export default {
+            name: 'todo-list',
+            components:{
+                TodoItem,
+            },
+
           data () {
             return {
                 newTodo: '',
                 isForTogo: 3,
                 beforeEditCache: '',
-
+                filter: 'all',
                 todos: 
                     [
                         {
@@ -71,33 +96,21 @@
                 this.todos.splice(index, 1);
             },
 
-            editTodo(todo){
-                this.beforeEditCache = todo.title;
-                todo.editing = true;
-            },
-
-            doneEdit(todo){
-
-                if(todo.title.trim() == ''){
-                    todo.title = this.beforeEditCache;
-                }
-
-                todo.editing = false;
-            },
-
-            cancleEdit(todo){
-                todo.editing = false;
-                todo.title = this.beforeEditCache;
-
-            },
 
             checkAllTodos(){
               this.todos.forEach((todo)=>
                 todo.completed = event.target.checked  )
-          }
+            },
 
+            clearCompleted(){
+                this.todos = this.todos.filter(todo=> !todo.completed)
+            },
 
-          },
+            finishedEdit(data){
+                this.todos.splice(data.index, 1, data.todo);
+            }
+
+            },
 
 
 
@@ -108,21 +121,35 @@
 
             anyRemaining(){
                   return  this.remaining == 0;
-                }
-          },
+                },
 
-          directives: {
-                focus: {
-                    // directive definition
-                    inserted: function (el) {
-                    el.focus()
-                    }
-                }
-            }
+            todosFilter(){
+               if(this.filter == 'all'){
+                    return this.todos;
+               }else if(this.filter == 'active'){
+
+                   return this.todos.filter(todo => !todo.completed)
+
+               }else if(this.filter == 'completed'){
+                return this.todos.filter(todo => todo.completed)
+               }
+               return this.todos;
+            },
+
+            showClearCompletedButton(){
+                return this.todos.filter(todo=> todo.completed).length > 0;
+            },
+
+          }
+
+    
     }
 </script>
 
 <style>
+
+@import url("https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.css");
+
 .todo-input{
     width: 100%;
     padding: 10px 18px;
@@ -185,7 +212,15 @@ button{
 }
 
 .active{
-    background: lightgray;
+    background: rgb(103, 216, 103);
+}
+
+.fade-enter-active, .fade-leave-active{
+    transition: opacity .2s;
+}
+
+.fade-enter, .fade-leave-to{
+    opacity: 0;
 }
 
 </style>
