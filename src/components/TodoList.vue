@@ -4,39 +4,22 @@
 
     <transition-group name="fade" enter-active-class="animated fadeInUp" leave-active-class="animated fadeOutDown">
 
-        <todo-item v-for="(todo, index) in todosFilter" :key="todo.id"  :todo="todo" :index="index" :checkAll="anyRemaining" @removedTodo="removeTodo" @finishedEdit= "finishedEdit">
-           <!-- <div class="todo-item-left">
-               <input type="checkbox" v-model="todo.completed">
-              <div class="todo-item-label" :class="{ completed : todo.completed }" v-if="!todo.editing" @dblclick="editTodo(todo)">
-                    {{ todo.title }}
-              </div>
-                <input v-else class="todo-item-edit" type="text" v-model="todo.title" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" v-focus 
-                 @keyup.esc="cancleEdit(todo)">
-           </div> 
-
-            <div class="remove-item" @click="removeTodo(index)">
-                &times;
-           </div> -->
+        <todo-item v-for="(todo, index) in todosFilter" :key="todo.id"  :todo="todo" :index="index" :checkAll="anyRemaining" >
 
         </todo-item>
 
     </transition-group>
 
         <div class="extra-container">
-            <div><label><input type="checkbox" :checked="anyRemaining" @change="checkAllTodos"> Check  All</label></div>
-            <div>{{ remaining }} item left</div>
+           <TodoCheckAll ></TodoCheckAll>
+          <TodoItemRemaining></TodoItemRemaining>
         </div>
 
         <div class="extra-container">
-            <div>
-                <button :class="{ active : filter == 'all'}" @click="filter = 'all'">All</button>
-                <button :class="{ active : filter == 'active'}" @click="filter = 'active'">Active</button>
-                <button :class="{ active : filter == 'completed'}" @click="filter = 'completed'">Completed</button>
-            </div>
-
+          <TodoFiltered></TodoFiltered>
             <div>
             <transition name="fade">
-                <button v-if="showClearCompletedButton" @click="clearCompleted">Clear Completed</button>
+               <TodoClearCompleted></TodoClearCompleted>
             </transition>
             </div>
         </div>
@@ -45,10 +28,19 @@
 
 <script>
     import TodoItem from './TodoItem';
+    import TodoItemRemaining  from'./TodoItemRemaining';
+    import TodoCheckAll  from'./TodoCheckAll';
+    import TodoFiltered  from'./TodoFiltered';
+    import TodoClearCompleted  from'./TodoClearCompleted';
+
         export default {
             name: 'todo-list',
             components:{
                 TodoItem,
+                TodoItemRemaining,
+                TodoCheckAll,
+                TodoFiltered,
+                TodoClearCompleted
             },
 
           data () {
@@ -83,66 +75,38 @@
                     return
                 }
 
-                this.todos.push({
+                this.$store.dispatch('addTodo', {
                     id: this.isForTogo,
                     title: this.newTodo,
                     completed: false,
-                });
+                    editing: false
+                })
+
                 this.newTodo ='',
                 this.isForTogo++
-            },
-
-            removeTodo(index){
-                this.todos.splice(index, 1);
-            },
-
-
-            checkAllTodos(){
-              this.todos.forEach((todo)=>
-                todo.completed = event.target.checked  )
-            },
-
-            clearCompleted(){
-                this.todos = this.todos.filter(todo=> !todo.completed)
-            },
-
-            finishedEdit(data){
-                this.todos.splice(data.index, 1, data.todo);
             }
 
-            },
-
+         },
 
 
           computed:{
             remaining(){
-                    return this.todos.filter(todo=> !todo.completed).length;
+                    return this.$store.getters.remaining
                 },
 
             anyRemaining(){
-                  return  this.remaining == 0;
+                  return this.$store.getters.anyRemaining
                 },
 
             todosFilter(){
-               if(this.filter == 'all'){
-                    return this.todos;
-               }else if(this.filter == 'active'){
-
-                   return this.todos.filter(todo => !todo.completed)
-
-               }else if(this.filter == 'completed'){
-                return this.todos.filter(todo => todo.completed)
-               }
-               return this.todos;
+               return this.$store.getters.todosFilter
             },
 
             showClearCompletedButton(){
-                return this.todos.filter(todo=> todo.completed).length > 0;
+                 return this.$store.getters.showClearCompletedButton
             },
 
           }
-
-    
     }
 </script>
 

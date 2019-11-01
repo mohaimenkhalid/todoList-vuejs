@@ -8,10 +8,15 @@
                 <input v-else class="todo-item-edit" type="text" v-model="title" @blur="doneEdit" @keyup.enter="doneEdit" v-focus 
                  @keyup.esc="cancleEdit">
         </div>
+        	
+        <div>
 
-         <div class="remove-item" @click="removeTodo(index)">
-                &times;
-           </div>
+        	<button @click="pluralize">Plural</button>
+        	<span class="remove-item" @click="removeTodo(index)">
+                &times; 
+           </span>
+
+        </div>
 	</div>
 </template>
 
@@ -30,22 +35,7 @@
 			}
 		},
 
-		props: {
-			todo: {
-				type: Object, 
-				required: true,
-
-			},
-			index:{
-				type: Number, 
-				required: true,
-			},
-
-			checkAll:{
-				type:Boolean,
-				required: true,
-			}
-		},
+	
 
 		watch:{
 			checkAll(){
@@ -59,9 +49,17 @@
 			}
 		},
 
+		created(){
+			eventBus.$on('pluralize', this.handlePluralize)
+		},
+
+		beforeDestroy(){
+			eventBus.$off('pluralize', this.handlePluralize)
+		},
+
 		methods:{
 			removeTodo(index){
-                this.$emit('removedTodo', index)
+                this.$store.dispatch('removeTodo', index)
             },
 
             editTodo(){
@@ -75,17 +73,12 @@
                 }
 
                 this.editing = false;
-                this.$emit('finishedEdit', {
-                	'index' : this.index,
-                	'todo' : {
-                		'id': this.id,
-                		'title' : this.title,
-                		'completed' : this.completed,
-                		'editing' : this.editing,
-
-                	}
+                this.$store.dispatch('doneEdit', {
+                    'id': this.id,
+                    'title' : this.title,
+                    'completed' : this.completed,
+                    'editing' : this.editing,
                 })
-
             },
 
             cancleEdit(){
@@ -93,6 +86,21 @@
                 this.title = this.beforeEditCache;
 
             },
+
+            pluralize(){
+            	eventBus.$emit('pluralize')
+            },
+
+            handlePluralize(){
+            	
+                this.title = this.title + 's';
+            	this.$store.state.todos.splice(this.index, 1, {
+                    'id': this.id,
+                    'title' : this.title,
+                    'completed' : this.completed,
+                    'editing' : this.editing,
+                });
+            }
 		},
 
 		directives: {
