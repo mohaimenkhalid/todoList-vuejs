@@ -97,7 +97,7 @@ export const store = new Vuex.Store({
 			context.commit('addTodo', todo);
 		},
 
-		clearCompleted(context){
+		clearCompleted({context}){
 			context.commit('clearCompleted');
 		},
 

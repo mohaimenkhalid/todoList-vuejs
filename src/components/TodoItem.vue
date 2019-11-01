@@ -35,6 +35,21 @@
 			}
 		},
 
+        props: {
+            todo: {
+                type: Object, 
+                required: true,
+            },
+            index:{
+                type: Number, 
+                required: true,
+            },
+            checkAll:{
+                type:Boolean,
+                required: true,
+            }
+        },
+
 	
 
 		watch:{
