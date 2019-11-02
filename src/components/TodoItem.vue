@@ -12,7 +12,7 @@
         <div>
 
         	<button @click="pluralize">Plural</button>
-        	<span class="remove-item" @click="removeTodo(index)">
+        	<span class="remove-item" @click="removeTodo(id, index)">
                 &times; 
            </span>
 

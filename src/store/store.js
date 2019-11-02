@@ -1,29 +1,17 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import axios from 'axios'
 
 Vue.use(Vuex)
+
+axios.defaults.baseURL = 'http://127.0.0.1:8000/api';
 
 export const store = new Vuex.Store({
 
 	state:{
 
 		filter: 'all',
-		todos: 
-            [
-                {
-                    'id': 1,
-                    'title': 'Finish vue Screenshot',
-                    'completed' : true,
-                    'editing' : false
-                },
-
-                {
-                    'id': 2,
-                    'title': 'Take over',
-                    'completed' : false,
-                    'editing' : false
-                }
-            ]
+		todos: [],
 	},
 
 	getters:{
@@ -55,6 +43,8 @@ export const store = new Vuex.Store({
 
 
 	mutations:{
+
+	
 		addTodo(state, todo){
 			state.todos.push({
 				id: todo.id,
@@ -65,6 +55,7 @@ export const store = new Vuex.Store({
 		},
 
 		clearCompleted(state){
+			
 			state.todos = state.todos.filter(todo=> !todo.completed);
 		},
 
@@ -76,7 +67,9 @@ export const store = new Vuex.Store({
 			state.todos.forEach((todo)=> todo.completed = checked)
 		},
 
-		removeTodo(state, index){
+		removeTodo(state, id){
+
+			const index = state.todos.findIndex(item => item.id == id);
 			 state.todos.splice(index, 1);
 		},
 
@@ -88,17 +81,54 @@ export const store = new Vuex.Store({
                     'completed' : todo.completed,
                     'editing' : todo.editing,
                 });
+		},
+
+		retrieveTodos(state, todos){
+
+			state.todos = todos;
 		}
 	}, 
 
 	actions: {
 
-		addTodo(context, todo){
-			context.commit('addTodo', todo);
+		retrieveTodos(context){
+			axios.get('/todos')
+				.then(response=>{
+					context.commit('retrieveTodos', response.data)
+				})
+				.catch(error=>{
+					console.log(error)
+				})
 		},
 
-		clearCompleted({context}){
-			context.commit('clearCompleted');
+		addTodo(context, todo){
+
+			axios.post('/todos', todo)
+				.then(response=>{
+					context.commit('addTodo', response.data)
+				})
+				.catch(error=>{
+					console.log(error)
+				})
+		},
+
+		clearCompleted(context){
+
+			const completed = store.state.todos
+				.filter(todo=> todo.completed)
+				.map(todo => todo.id)
+
+			axios.delete('/todosdeletecompleted', {
+				data:{
+					todos: completed,
+				}
+			})
+				.then(response=>{
+					context.commit('clearCompleted')
+				})
+				.catch(error=>{
+					console.log(error)
+				})
 		},
 
 		updateFilter(context, filter){
@@ -106,15 +136,37 @@ export const store = new Vuex.Store({
 		},
 
 		checkAll(context, checked){
-			context.commit('checkAll', checked);
+
+			axios.patch('/todoscheckall', {
+				completed: checked,
+			})
+				.then(response=>{
+					context.commit('checkAll', checked)
+				})
+				.catch(error=>{
+					console.log(error)
+				})
 		},
 
-		removeTodo(context, index){
-			context.commit('removeTodo', index); 
+		removeTodo(context, id, index){
+
+			axios.delete('/todos/'+id)
+				.then(response=>{
+					context.commit('removeTodo', index)
+				})
+				.catch(error=>{
+					console.log(error)
+				})
 		},
 
 		doneEdit(context, todo){
-			context.commit('doneEdit', todo);
+			axios.patch('/todos/'+todo.id, todo)
+				.then(response=>{
+					context.commit('doneEdit', response.data)
+				})
+				.catch(error=>{
+					console.log(error)
+				})
 		}
 
 	}

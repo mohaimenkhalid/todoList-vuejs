@@ -49,22 +49,7 @@
                 isForTogo: 3,
                 beforeEditCache: '',
                 filter: 'all',
-                todos: 
-                    [
-                        {
-                            'id': 1,
-                            'title': 'Finish vue Screenshot',
-                            'completed' : true,
-                            'editing' : false
-                        },
-
-                        {
-                            'id': 2,
-                            'title': 'Take over',
-                            'completed' : false,
-                            'editing' : false
-                        }
-                    ]
+                todos: []
             }
           },
 
@@ -86,6 +71,10 @@
                 this.isForTogo++
             }
 
+         },
+
+         created(){
+            this.$store.dispatch('retrieveTodos')
          },
 
 
