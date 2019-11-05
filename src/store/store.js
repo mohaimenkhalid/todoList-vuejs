@@ -12,6 +12,7 @@ export const store = new Vuex.Store({
 
 		filter: 'all',
 		todos: [],
+		token: localStorage.getItem('token') || null,
 	},
 
 	getters:{
@@ -39,6 +40,10 @@ export const store = new Vuex.Store({
             showClearCompletedButton(state){
                 return state.todos.filter(todo=> todo.completed).length > 0;
             },
+
+            loggedIn(state){
+            	return state.token !== null;
+            }
 	},
 
 
@@ -86,10 +91,72 @@ export const store = new Vuex.Store({
 		retrieveTodos(state, todos){
 
 			state.todos = todos;
+		},
+
+		retriveToken(state, token){
+			state.token = token;
+		},
+
+		destroyToken(state){
+			state.token = null
 		}
 	}, 
 
 	actions: {
+
+		register(context, credentials){
+
+			return new Promise((resolve, reject)=>{
+				axios.post('/register', credentials)
+				.then(response=>{
+					/*localStorage.setItem('token', response.data.success.token)
+					context.commit('retriveToken', response.data.success.token);   if use direct login*/
+					resolve(response);
+				})
+				.catch(error=>{
+					console.log(error)
+					reject(error);
+				})
+
+			});
+		},
+
+		retriveToken(context, credentials){
+
+			return new Promise((resolve, reject)=>{
+				axios.post('/login', credentials)
+				.then(response=>{
+					localStorage.setItem('token', response.data.success.token)
+					context.commit('retriveToken', response.data.success.token);
+					resolve(response);
+				})
+				.catch(error=>{
+					console.log(error)
+					reject(error);
+				})
+
+			});
+		},
+
+		destroyToken(context){
+
+			axios.defaults.headers.common['Authorization'] = 'Bearer ' + context.state.token
+
+			if (context.getters.loggedIn) {
+				return new Promise((resolve, reject)=>{
+					axios.post('/logout')
+						.then(response=>{
+							localStorage.removeItem('token')
+							context.commit('destroyToken')
+							resolve(response);
+						})
+						.catch(error=>{
+							console.log(error)
+							reject(error)
+						})
+				})
+			}
+		},
 
 		retrieveTodos(context){
 			axios.get('/todos')
@@ -105,6 +172,7 @@ export const store = new Vuex.Store({
 
 			axios.post('/todos', todo)
 				.then(response=>{
+
 					context.commit('addTodo', response.data)
 				})
 				.catch(error=>{
